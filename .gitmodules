@@ -1,0 +1,3 @@
+[submodule "src/cpu/lvp"]
+	path = src/cpu/lvp
+	url = https://github.com/chrisherczeg/lvp.git

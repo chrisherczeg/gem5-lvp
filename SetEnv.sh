@@ -74,6 +74,14 @@ arm_run_benchmark()
     -b $1
 }
 
+main()
+{
+    echo "Updating submodules..."
+    git submodule update --init --recursive
+}
+
+main
+
 export -f build_x86
 export -f build_arm
 export -f run_hello_world
