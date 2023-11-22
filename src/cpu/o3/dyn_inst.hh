@@ -95,6 +95,64 @@ class DynInst : public ExecContext, public RefCounted
         uint8_t *readySrcIdx;
     };
 
+    LVPType _classification = LVP_STRONG_UNPREDICTABLE;
+
+    RegVal _predictedVal;
+
+    std::pair<LVPType, RegVal> 
+    predictLoad(ThreadID tid) {
+        std::pair<LVPType, RegVal> temp = this->cpu->lvp->predictLoad(tid, 
+                                                              this->instAddr());
+        _classification = temp.first;
+        _predictedVal = temp.second;
+        return temp;
+    }
+
+    bool
+    verifyConstLoad(ThreadID tid) {
+        Addr lvpt_index = this->cpu->lvp->lookupLVPTIndex(tid, 
+                                                          this->instAddr());
+        return this->cpu->lvp->processLoadAddress(tid, this->effAddr, 
+                                                  lvpt_index);
+    } 
+
+    void
+    tagLVPDestReg(int idx) {
+        this->cpu->tagLVPDestReg(this->_destRegIdx[idx]);
+    }
+
+    bool 
+    checkLVPTag(int idx) {
+        return this->cpu->checkLVPTag(this->_srcRegIdx[idx]);
+    }
+
+    void 
+    removeLVPTag(int idx) {
+        this->cpu->removeLVPTag(this->_destRegIdx[idx]);
+    }
+
+    bool 
+    verifyPrediction(int idx) {
+        RegVal temp;
+        if(this->isInteger()) {
+            temp = this->cpu->readIntReg(_destRegIdx[idx]);
+        }
+        else if(this->isFloating()) {
+            temp = this->cpu->readFloatReg(_destRegIdx[idx]);
+        }
+        else {
+            return true;
+        }
+        this->removeLVPTag(idx);
+        return this->cpu->lvp->verifyPrediction(this->threadNumber, 
+                        this->instAddr(), this->effAddr, temp, _predictedVal);
+    }
+
+    void 
+    lvpStoreAddressLookup() {
+        this->cpu->lvp->processStoreAddress(inst->effAddr, this->threadNumber);
+    }
+
     static void *operator new(size_t count, Arrays &arrays);
 
     /** BaseDynInst constructor given a binary instruction. */
