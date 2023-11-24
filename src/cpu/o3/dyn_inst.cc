@@ -219,10 +219,10 @@ DynInst::~DynInst()
             // Print info needed by the pipeline activity viewer.
             DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
                      fetch,
-                     pcState().instAddr(),
+                     pcState().effAddr,
                      pcState().microPC(),
                      seqNum,
-                     staticInst->disassemble(pcState().instAddr()));
+                     staticInst->disassemble(pcState().effAddr));
 
             val = (decodeTick == -1) ? 0 : fetch + decodeTick;
             DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
@@ -278,8 +278,8 @@ DynInst::dumpSNList()
 void
 DynInst::dump()
 {
-    cprintf("T%d : %#08d `", threadNumber, pc->instAddr());
-    std::cout << staticInst->disassemble(pc->instAddr());
+    cprintf("T%d : %#08d `", threadNumber, pc->effAddr);
+    std::cout << staticInst->disassemble(pc->effAddr);
     cprintf("'\n");
 }
 
@@ -287,8 +287,8 @@ void
 DynInst::dump(std::string &outstring)
 {
     std::ostringstream s;
-    s << "T" << threadNumber << " : 0x" << pc->instAddr() << " "
-      << staticInst->disassemble(pc->instAddr());
+    s << "T" << threadNumber << " : 0x" << pc->effAddr << " "
+      << staticInst->disassemble(pc->effAddr);
 
     outstring = s.str();
 }
