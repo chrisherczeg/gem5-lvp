@@ -1047,7 +1047,7 @@ IEW::dispatchInsts(ThreadID tid)
                             scoreboard->setReg(inst->renamedDestRegIdx(0));
                         }
                         else if(inst->isFloating()) {
-                            inst->setFloatRegOperand(inst->staticInst.get(), 
+                           inst->setFloatRegOperandBits(inst->staticInst.get(), 
                                                    0, prediction.second);
                             instQueue.wakeDependents(inst);
                             scoreboard->setReg(inst->renamedDestRegIdx(0));
@@ -1075,6 +1075,7 @@ IEW::dispatchInsts(ThreadID tid)
                 if(inst->numDestRegs() == 1) {
                     // Tag the destination register for subsequent dependent 
                     // instructions
+                    /*
                     inst->tagLVPDestReg(0);
                     if(inst->isInteger()) {
                         inst->setIntRegOperand(inst->staticInst.get(), 
@@ -1091,6 +1092,7 @@ IEW::dispatchInsts(ThreadID tid)
                     else {
                         // This isn't supposed to happen
                     }
+                    */
                 }
                 else {
                     // This isn't supposed to happen (except maybe for
@@ -1333,7 +1335,13 @@ IEW::executeInsts()
 
                 if(inst->isExecuted() && fault == NoFault) {
                     if (inst->numDestRegs() == 1) {
-                        inst->verifyPrediction(0);
+                        bool verify = inst->verifyPrediction(0);
+                        if(!verify && inst->isSpeculatedLoad()) {
+                            // Add the destination register to a list of 
+                            // mispredicted registers so that the instns in the
+                            // IQ know that they have to execute again.
+                            //instQueue.addToMispredictList(inst, 0);
+                        }
                     }
                     else {
                         // This shouldn't happen
@@ -1365,7 +1373,7 @@ IEW::executeInsts()
                 }
 
                 if(inst->isExecuted() && fault == NoFault) {
-                    inst->lvpStoreAddressLookup();
+                    // inst->lvpStoreAddressLookup();
                 }
 
                 // Store conditionals will mark themselves as

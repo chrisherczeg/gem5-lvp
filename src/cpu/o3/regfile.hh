@@ -103,6 +103,8 @@ class PhysRegFile
 
     std::list<PhysRegIdPtr> regsWithPredictedLoad;
 
+    std::list<PhysRegIdPtr> mispredictList;
+
     /**
      * Number of physical general purpose registers
      */
@@ -152,6 +154,19 @@ class PhysRegFile
      * Destructor to free resources
      */
     ~PhysRegFile() {}
+
+    void addToMispredictList(PhysRegIdPtr reg) {
+        mispredictList.push_back(reg);
+    }
+
+    bool searchMispredictList(PhysRegIdPtr src_reg) {
+        auto itr = mispredictList.begin();
+        while(itr != mispredictList.end()) {
+            if(*itr == src_reg) return true;
+            itr++;
+        }
+        return false;
+    }
 
     bool checkPredictedLoadRegister (PhysRegIdPtr src_reg) {
         auto itr = regsWithPredictedLoad.begin();

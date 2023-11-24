@@ -169,5 +169,6 @@ class BaseO3CPU(BaseCPU):
     branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
                                        "Branch Predictor")
-    loadValPred = Param.LoadValuePredictor()
+    loadValPred = Param.LoadValuePredictionUnit(LoadValuePredictionUnit(),
+                                                 "Load value predictor")
     needsTSO = Param.Bool(False, "Enable TSO Memory model")

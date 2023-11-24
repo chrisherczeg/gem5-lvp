@@ -130,6 +130,14 @@ class CPU : public BaseCPU
         regFile.clearPredictedLoadRegister(reg);
     }
 
+    void addToMispredictList(PhysRegIdPtr reg) {
+        regFile.addToMispredictList(reg);
+    }
+
+    bool searchMispredictList(PhysRegIdPtr src_reg) {
+        return regFile.searchMispredictList(src_reg);
+    }
+
   private:
 
     /** The tick event used for scheduling CPU ticks. */
