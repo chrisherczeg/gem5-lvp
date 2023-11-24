@@ -100,6 +100,10 @@ class DynInst : public ExecContext, public RefCounted
 
     bool _predictionCorrect;
 
+    bool isConstLoad() {
+        return _classification == LVP_CONSTANT;
+    }
+
     LVPType _classification = LVP_STRONG_UNPREDICTABLE;
 
     RegVal _predictedVal;
