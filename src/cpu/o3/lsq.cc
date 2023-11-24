@@ -839,6 +839,10 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
             inst->effSize = size;
             inst->effAddrValid(true);
 
+            if(inst->isConstLoad()) {
+                inst->verifyConstLoad(0);
+            }
+
             if (cpu->checker) {
                 inst->reqToVerify = std::make_shared<Request>(*request->req());
             }

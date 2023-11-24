@@ -129,7 +129,7 @@ class BaseO3CPU(BaseCPU):
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
     LSQDepCheckShift = Param.Unsigned(4,
             "Number of places to shift addr before check")
-    LSQCheckLoads = Param.Bool(True,
+    LSQCheckLoads = Param.Bool(False,
         "Should dependency violations be checked for "
         "loads & stores or just stores")
     store_set_clear_period = Param.Unsigned(250000,

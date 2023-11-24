@@ -1326,7 +1326,7 @@ IEW::executeInsts()
             } else if (inst->isLoad()) {
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
-                if(inst->isConstLoad())
+                if(inst->isConstLoad() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
                     inst->verifyConstLoad(inst->threadNumber);
                 fault = ldstQueue.executeLoad(inst);
 
