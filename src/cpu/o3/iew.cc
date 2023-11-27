@@ -1008,7 +1008,8 @@ IEW::dispatchInsts(ThreadID tid)
         } else if (inst->isLoad()) {
             DPRINTF(IEW, "[tid:%i] Issue: Memory instruction "
                     "encountered, adding to LSQ.\n", tid);
-
+            
+            std::pair<LVPType, RegVal> prediction = inst->predictLoad(tid);
              if(prediction.first == LVP_CONSTANT) {
                 // Trigger a CVU lookup of the lvpt index and the load address
                 bool const_valid = false; //inst->verifyConstLoad(tid);
@@ -1032,7 +1033,7 @@ IEW::dispatchInsts(ThreadID tid)
                     // Write the predicted value to the allocated register and
                     // forward all values 
                     // Mark this load as executed and ready to commit.
-                     DPRINTF(LVP, "IEW: Const load [sn: %d] found by LVP: 0x%x\n", inst->seqNum, inst->instAddr());
+                    //  DPRINTF(LVP, "IEW: Const load [sn: %d] found by LVP: 0x%x\n", inst->seqNum, inst->instAddr());
                     ldstQueue.insertLoad(inst);
 
                     ++iewStats.dispLoadInsts;
@@ -1052,13 +1053,13 @@ IEW::dispatchInsts(ThreadID tid)
                             inst->setIntRegOperand(inst->staticInst.get(), 
                                                    0, prediction.second);
                             instQueue.wakeDependents(inst);
-                            scoreboard->setReg(inst->renamedDestRegIdx(0));
+                            scoreboard->setReg(inst->renamedDestIdx(0));
                         }
                         else if(inst->isFloating()) {
                            inst->setFloatRegOperandBits(inst->staticInst.get(), 
                                                    0, prediction.second);
                             instQueue.wakeDependents(inst);
-                            scoreboard->setReg(inst->renamedDestRegIdx(0));
+                            scoreboard->setReg(inst->renamedDestIdx(0));
                         }
                         else {
                             // This isn't supposed to happen
@@ -1090,13 +1091,13 @@ IEW::dispatchInsts(ThreadID tid)
                         inst->setIntRegOperand(inst->staticInst.get(), 
                                                0, prediction.second);
                         instQueue.wakeDependents(inst);
-                        scoreboard->setReg(inst->renamedDestRegIdx(0));
+                        scoreboard->setReg(inst->renamedDestIdx(0));
                     }
                     else if(inst->isFloating()) {
                         inst->setFloatRegOperand(inst->staticInst.get(), 
                                                0, prediction.second);
                         instQueue.wakeDependents(inst);
-                        scoreboard->setReg(inst->renamedDestRegIdx(0));
+                        scoreboard->setReg(inst->renamedDestIdx(0));
                     }
                     else {
                         // This isn't supposed to happen
@@ -1546,20 +1547,20 @@ IEW::writebackInsts()
                     // Pass the load value to the destination register
                     //inst->setCanCommit();
                     if(inst->numDestRegs() == 1) {
-                        auto ptr = inst->renamedDestRegIdx(0);
-                        if(ptr->isIntPhysReg()) {
-                            inst->setIntRegOperand(inst->staticInst.get(), 
+                        auto ptr = inst->renamedDestIdx(0);
+                        if(ptr->is(IntRegClass)) {
+                            inst->setRegOperand(inst->staticInst.get(), 
                                                    0, inst->getPredictedValue());
                             //instQueue.wakeDependents(inst);
                             scoreboard->setReg(ptr);
-                            DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
+                            // DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
                         }
-                        else if(ptr->isFloatPhysReg()) {
-                            inst->setFloatRegOperandBits(inst->staticInst.get(), 
+                        else if(ptr->is(FloatRegClass)) {
+                            inst->setRegOperand(inst->staticInst.get(), 
                                                    0, inst->getPredictedValue());
                             //instQueue.wakeDependents(inst);
-                            scoreboard->setReg(inst->renamedDestRegIdx(0));
-                            DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
+                            scoreboard->setReg(inst->renamedDestIdx(0));
+                            // DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
                         }
                         else {
                             // This isn't supposed to happen

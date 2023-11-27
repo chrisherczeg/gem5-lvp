@@ -1336,7 +1336,6 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 {
     LQEntry& load_entry = loadQueue[load_idx];
     const DynInstPtr& load_inst = load_entry.instruction();
-
     load_entry.setRequest(request);
     assert(load_inst);
 
@@ -1388,9 +1387,9 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
         // This is basically forwarding values from a local resource
         // The data will be written during IEW WB
         // Here, we just schedule the writeback event of the load
-        DPRINTF(LSQUnit, "Const load[%llu]: 0x%x scheduling a WB event\n", load_inst->seqNum, load_inst->instAddr());
+        // DPRINTF(LSQUnit, "Const load[%llu]: 0x%x scheduling a WB event\n", load_inst->seqNum, load_inst->instAddr());
         load_inst->memData = new uint8_t[MaxDataBytes];
-        PacketPtr main_pkt = new Packet(req->mainRequest(), MemCmd::ReadReq);
+        PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
         main_pkt->dataStatic(load_inst->memData);
         WritebackEvent *wb = new WritebackEvent(load_inst, main_pkt, this);
         cpu->schedule(wb, curTick());

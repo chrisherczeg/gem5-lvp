@@ -209,7 +209,7 @@ DynInst::~DynInst()
     for (int i = 0; i < ((_numSrcs + 7) / 8); i++)
         _readySrcIdx[i].~uint8_t();
 
-#if TRACING_ON
+#if 0
     if (debug::O3PipeView) {
         Tick fetch = fetchTick;
         // fetchTick can be -1 if the instruction fetched outside the trace
@@ -278,8 +278,8 @@ DynInst::dumpSNList()
 void
 DynInst::dump()
 {
-    cprintf("T%d : %#08d `", threadNumber, pc->effAddr);
-    std::cout << staticInst->disassemble(pc->effAddr);
+    cprintf("T%d : %#08d `", threadNumber, pc->instAddr());
+    std::cout << staticInst->disassemble(pc->instAddr());
     cprintf("'\n");
 }
 
@@ -287,8 +287,8 @@ void
 DynInst::dump(std::string &outstring)
 {
     std::ostringstream s;
-    s << "T" << threadNumber << " : 0x" << pc->effAddr << " "
-      << staticInst->disassemble(pc->effAddr);
+    s << "T" << threadNumber << " : 0x" << pc->instAddr() << " "
+      << staticInst->disassemble(pc->instAddr());
 
     outstring = s.str();
 }

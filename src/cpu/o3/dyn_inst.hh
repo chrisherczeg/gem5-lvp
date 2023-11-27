@@ -111,7 +111,7 @@ class DynInst : public ExecContext, public RefCounted
     std::pair<LVPType, RegVal> 
     predictLoad(ThreadID tid) {
         std::pair<LVPType, RegVal> temp = this->cpu->lvp->predictLoad(tid, 
-                                                              this->effAddr);
+                                                              this->pc->instAddr());
         _classification = temp.first;
         _predictedVal = temp.second;
         return temp;
@@ -120,11 +120,11 @@ class DynInst : public ExecContext, public RefCounted
     bool
     verifyConstLoad(ThreadID tid) {
         Addr lvpt_index = this->cpu->lvp->lookupLVPTIndex(tid, 
-                                                          this->effAddr);
-         _predictionCorrect = this->cpu->lvp->processLoadAddress(tid,
-                                                  this->effAddr, lvpt_index);
+                                                          this->pc->instAddr());
+        _predictionCorrect = this->cpu->lvp->processLoadAddress(tid,
+                                                  this->pc->instAddr(), this->effAddr, lvpt_index);
         return _predictionCorrect;
-    } 
+    }  
 
     bool
     isConstPredictionCorrect() {
@@ -138,56 +138,48 @@ class DynInst : public ExecContext, public RefCounted
 
     void
     tagLVPDestReg(int idx) {
-        this->cpu->tagLVPDestReg(this->destRegIdx(idx));
+        this->cpu->tagLVPDestReg(this->renamedDestIdx(idx));
     }
 
     bool 
     checkLVPTag(int idx) {
-        return this->cpu->checkLVPTag(this->srcRegIdx[idx]);
+        return this->cpu->checkLVPTag(this->renamedSrcIdx(idx));
     }
 
     PhysRegIdPtr
     getSrcRegPtr(int idx) {
-        return this->srcRegIdx[idx];
+        return this->renamedSrcIdx(idx);
     }
 
     PhysRegIdPtr
     getDestRegPtr(int idx) {
-        return this->destRegIdx(idx);
+        return this->renamedDestIdx(idx);
     }
 
     void 
     removeLVPTag(int idx) {
-        this->cpu->removeLVPTag(this->destRegIdx(idx));
+        this->cpu->removeLVPTag(this->renamedDestIdx(idx));
     }
 
     void 
     addToMispredictList(int idx) {
-        this->cpu->addToMispredictList(this->destRegIdx(idx));
+        this->cpu->addToMispredictList(this->renamedDestIdx(idx));
     }
 
     bool 
     searchMispredictList(int idx) {
-        return this->cpu->searchMispredictList(this->srcRegIdx[idx]);
+        return this->cpu->searchMispredictList(this->renamedSrcIdx(idx));
     }
 
     bool 
     verifyPrediction(int idx) {
         RegVal temp = 0;
-        auto ptr = this->destRegIdx(idx);
-        if(ptr->isIntPhysReg()) {
-            temp = this->cpu->readIntReg(ptr);
-        }
-        else if(ptr->isFloatPhysReg()) {
-            temp = this->cpu->readFloatReg(ptr);
-        }
-        else {
-           return true;
-        }
+        auto ptr = this->renamedDestIdx(idx);
+        temp = this->cpu->getReg(ptr);
         this->removeLVPTag(idx);
         if(!this->effAddrValid()) panic("Virtual address not valid yet");
         return this->cpu->lvp->verifyPrediction(this->threadNumber, 
-                        this->effAddr, this->effAddr, temp, _predictedVal, _classification);
+                        this->pc->instAddr(), this->effAddr, temp, _predictedVal, _classification);
     }
 
     void 

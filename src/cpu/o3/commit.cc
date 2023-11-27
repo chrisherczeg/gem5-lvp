@@ -694,9 +694,9 @@ Commit::tick()
                     tid, inst->seqNum, inst->pcState());
 
              for(int i = 0; i < inst->numSrcRegs(); i++) {
-                if(!inst->isReadySrcRegIdx(i)) {
-                    auto ptr = inst->renamedSrcRegIdx(i);
-                    DPRINTF(Commit, "Src reg %d for inst[%llu]: 0x%x not ready\n", ptr->index(),inst->seqNum, inst->instAddr());
+                if(!inst->readySrcIdx(i)) {
+                    auto ptr = inst->renamedSrcIdx(i);
+                    // DPRINTF(Commit, "Src reg %d for inst[%llu]: 0x%x not ready\n", ptr->index(),inst->seqNum, inst->instAddr());
                 }
             }
             if(inst->isConstPredictionCorrect() && !inst->readyToCommit()) {
