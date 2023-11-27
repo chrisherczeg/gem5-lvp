@@ -71,6 +71,8 @@
 #include "params/BaseO3CPU.hh"
 #include "sim/process.hh"
 
+#include "cpu/lvp/load_value_prediction_unit.hh"
+
 namespace gem5
 {
 
@@ -113,6 +115,28 @@ class CPU : public BaseCPU
 
     /** Overall CPU status. */
     Status _status;
+
+    LoadValuePredictionUnit *lvp;
+
+    void tagLVPDestReg(PhysRegIdPtr reg) {
+        regFile.insertPredictedLoadRegister(reg);
+    }
+
+    bool checkLVPTag(PhysRegIdPtr src_reg) {
+        return regFile.checkPredictedLoadRegister(src_reg);
+    }
+
+    void removeLVPTag(PhysRegIdPtr reg) {
+        regFile.clearPredictedLoadRegister(reg);
+    }
+
+    void addToMispredictList(PhysRegIdPtr reg) {
+        regFile.addToMispredictList(reg);
+    }
+
+    bool searchMispredictList(PhysRegIdPtr src_reg) {
+        return regFile.searchMispredictList(src_reg);
+    }
 
   private:
 

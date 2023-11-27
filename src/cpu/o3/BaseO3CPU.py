@@ -44,6 +44,7 @@ from m5.objects.BaseCPU import BaseCPU
 from m5.objects.FUPool import *
 #from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
+from m5.objects.LoadValuePredictionUnit import *
 
 class SMTFetchPolicy(ScopedEnum):
     vals = [ 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
@@ -129,7 +130,7 @@ class BaseO3CPU(BaseCPU):
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
     LSQDepCheckShift = Param.Unsigned(4,
             "Number of places to shift addr before check")
-    LSQCheckLoads = Param.Bool(True,
+    LSQCheckLoads = Param.Bool(False,
         "Should dependency violations be checked for "
         "loads & stores or just stores")
     store_set_clear_period = Param.Unsigned(250000,
@@ -169,4 +170,6 @@ class BaseO3CPU(BaseCPU):
     branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
                                        "Branch Predictor")
+    loadValPred = Param.LoadValuePredictionUnit(LoadValuePredictionUnit(),
+                                                 "Load value predictor")
     needsTSO = Param.Bool(False, "Enable TSO Memory model")

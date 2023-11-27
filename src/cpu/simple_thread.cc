@@ -173,11 +173,11 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
 void
 SimpleThread::htmAbortTransaction(uint64_t htm_uid, HtmFailureFaultCause cause)
 {
-    baseCpu->htmSendAbortSignal(threadId(), htm_uid, cause);
+    // baseCpu->htmSendAbortSignal(threadId(), htm_uid, cause);
 
-    // these must be reset after the abort signal has been sent
-    htmTransactionStarts = 0;
-    htmTransactionStops = 0;
+    // // these must be reset after the abort signal has been sent
+    // htmTransactionStarts = 0;
+    // htmTransactionStops = 0;
 }
 
 BaseHTMCheckpointPtr&

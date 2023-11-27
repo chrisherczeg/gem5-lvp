@@ -44,6 +44,7 @@
 
 #include <cstring>
 #include <vector>
+#include <list>
 
 #include "arch/generic/isa.hh"
 #include "arch/vecregs.hh"
@@ -100,6 +101,10 @@ class PhysRegFile
     /** Misc Reg Ids */
     std::vector<PhysRegId> miscRegIds;
 
+    std::list<PhysRegIdPtr> regsWithPredictedLoad;
+
+    std::list<PhysRegIdPtr> mispredictList;
+
     /**
      * Number of physical general purpose registers
      */
@@ -149,6 +154,52 @@ class PhysRegFile
      * Destructor to free resources
      */
     ~PhysRegFile() {}
+
+    void addToMispredictList(PhysRegIdPtr reg) {
+        mispredictList.push_back(reg);
+    }
+
+    bool searchMispredictList(PhysRegIdPtr src_reg) {
+        auto itr = mispredictList.begin();
+        while(itr != mispredictList.end()) {
+            if(*itr == src_reg) return true;
+            itr++;
+        }
+        return false;
+    }
+
+    bool checkPredictedLoadRegister (PhysRegIdPtr src_reg) {
+        auto itr = regsWithPredictedLoad.begin();
+        while (itr != regsWithPredictedLoad.end()) {
+            if (*itr == src_reg) return true;
+            itr++;
+        }
+        return false;
+    }
+
+    /**
+     * @brief      Inserts a physical register that contains a speculated value
+     *
+     * @param[in]  reg   The register
+     */
+    void insertPredictedLoadRegister (PhysRegIdPtr reg) {
+        regsWithPredictedLoad.push_back(reg);
+    }
+
+    /**
+     * @brief      Clears a physical register pointer from the list
+     *
+     * @param[in]  reg   The register
+     */
+    void clearPredictedLoadRegister (PhysRegIdPtr reg) {
+        auto itr = regsWithPredictedLoad.begin();
+        while(itr != regsWithPredictedLoad.end()) {
+            if (*itr == reg) break;
+            itr++;
+        }
+        if (itr != regsWithPredictedLoad.end())
+            regsWithPredictedLoad.erase(itr);
+    }
 
     /** Initialize the free list */
     void initFreeList(UnifiedFreeList *freeList);
