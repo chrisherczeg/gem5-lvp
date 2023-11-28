@@ -21,7 +21,7 @@ run_hello_world()
 
 daxpy_build()
 {
-    /usr/bin/g++ -O2 -std=gnu++11 part1/daxpy.cc $1
+    /usr/bin/g++ -O2 -std=gnu++11 test_images/daxpy.cc $1
 
     if [ -f a.out ];
     then
@@ -29,9 +29,26 @@ daxpy_build()
     fi
 }
 
+matrix_transform_build()
+{
+    /usr/bin/g++ -O0 -std=gnu++11 test_images/matrix_transform.cc $1
+
+    if [ -f a.out ];
+    then
+        mv a.out matrix_transform.out
+    fi
+}
+
+matrix_transform_run()
+{
+    ./build/ECE565-X86/gem5.opt configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches
+
+    mv m5out/stats.txt m5out/matrix_transform.txt
+}
+
 daxpy_run()
 {
-    ./build/ECE565-X86/gem5.opt configs/example/se.py -c daxpy.out
+    ./build/ECE565-X86/gem5.opt configs/example/se.py --cpu-type=O3CPU -c daxpy.out --caches
 
     mv m5out/stats.txt m5out/daxpy_stats.txt
 }
@@ -46,7 +63,7 @@ m5ops_build()
 
 daxpy_m5_build()
 {
-    /usr/bin/g++ -O2 -std=gnu++11 -I include/ -L util/m5/build/x86/out/ part1/daxpy.cc -lm5 $1
+    /usr/bin/g++ -O2 -std=gnu++11 -I include/ -L util/m5/build/x86/out/ test_images/daxpy.cc -lm5 $1
     if [ -f a.out ];
     then
         mv a.out daxpy_m5.out
