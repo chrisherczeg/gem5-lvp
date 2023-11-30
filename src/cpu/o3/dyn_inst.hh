@@ -96,9 +96,9 @@ class DynInst : public ExecContext, public RefCounted
         uint8_t *readySrcIdx;
     };
 
-    bool _specExecOnLoad;
+    bool _specExecOnLoad = false;
 
-    bool _predictionCorrect;
+    bool _predictionCorrect = false;
 
     bool isConstLoad() {
         return _classification == LVP_CONSTANT;
@@ -106,7 +106,7 @@ class DynInst : public ExecContext, public RefCounted
 
     LVPType _classification = LVP_STRONG_UNPREDICTABLE;
 
-    RegVal _predictedVal;
+    RegVal _predictedVal = 0;
 
     std::pair<LVPType, RegVal> 
     predictLoad(ThreadID tid) {
