@@ -31,7 +31,7 @@ daxpy_build()
 
 matrix_transform_build()
 {
-    /usr/bin/g++ -O0 -std=gnu++11 test_images/matrix_transform.cc $1
+    /usr/bin/g++ -O0 -std=gnu++11 test_images/matrix_transform.c $1
 
     if [ -f a.out ];
     then

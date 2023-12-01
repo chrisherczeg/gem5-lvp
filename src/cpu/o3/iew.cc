@@ -1553,14 +1553,14 @@ IEW::writebackInsts()
                                                    0, inst->getPredictedValue());
                             //instQueue.wakeDependents(inst);
                             scoreboard->setReg(ptr);
-                            // DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
+                            DPRINTF(LVP, "LVP Const INT Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->effAddr, ptr->index());
                         }
                         else if(ptr->is(FloatRegClass)) {
                             inst->setRegOperand(inst->staticInst.get(), 
                                                    0, inst->getPredictedValue());
                             //instQueue.wakeDependents(inst);
                             scoreboard->setReg(inst->renamedDestIdx(0));
-                            // DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
+                            DPRINTF(LVP, "LVP Const FLOAT Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->effAddr, ptr->index());
                         }
                         else {
                             // This isn't supposed to happen
