@@ -1345,20 +1345,20 @@ IEW::executeInsts()
                     inst->fault = NoFault;
                 }
 
-                if(inst->isExecuted() && fault == NoFault) {
-                    if (inst->numDestRegs() == 1) {
-                        bool verify = inst->verifyPrediction(0);
-                        if(!verify && inst->isSpeculatedLoad()) {
-                            // Add the destination register to a list of 
-                            // mispredicted registers so that the instns in the
-                            // IQ know that they have to execute again.
-                            //instQueue.addToMispredictList(inst, 0);
-                        }
-                    }
-                    else {
-                        // This shouldn't happen
-                    }
-                }
+                // if(inst->isExecuted() && fault == NoFault) {
+                //     if (inst->numDestRegs() == 1) {
+                //         bool verify = inst->verifyPrediction(0);
+                //         if(!verify && inst->isSpeculatedLoad()) {
+                //             // Add the destination register to a list of 
+                //             // mispredicted registers so that the instns in the
+                //             // IQ know that they have to execute again.
+                //             //instQueue.addToMispredictList(inst, 0);
+                //         }
+                //     }
+                //     else {
+                //         // This shouldn't happen
+                //     }
+                // }
             } else if (inst->isStore()) {
                 fault = ldstQueue.executeStore(inst);
 
@@ -1385,7 +1385,7 @@ IEW::executeInsts()
                 }
 
                 if(inst->isExecuted() && fault == NoFault) {
-                    // inst->lvpStoreAddressLookup();
+                    inst->lvpStoreAddressLookup();
                 }
 
                 // Store conditionals will mark themselves as
@@ -1553,14 +1553,14 @@ IEW::writebackInsts()
                                                    0, inst->getPredictedValue());
                             //instQueue.wakeDependents(inst);
                             scoreboard->setReg(ptr);
-                            // DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
+                            DPRINTF(LVP, "LVP Const INT Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->effAddr, ptr->index());
                         }
                         else if(ptr->is(FloatRegClass)) {
                             inst->setRegOperand(inst->staticInst.get(), 
                                                    0, inst->getPredictedValue());
                             //instQueue.wakeDependents(inst);
                             scoreboard->setReg(inst->renamedDestIdx(0));
-                            // DPRINTF(LVP, "LVP Const Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->instAddr(), ptr->index());
+                            DPRINTF(LVP, "LVP Const FLOAT Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->effAddr, ptr->index());
                         }
                         else {
                             // This isn't supposed to happen

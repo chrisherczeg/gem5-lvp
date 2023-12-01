@@ -63,6 +63,7 @@ from common import MemConfig
 from common.FileSystemConfig import config_filesystem
 from common.Caches import *
 from common.cpu2000 import *
+from common import LvpOptions
 
 def get_processes(args):
     """Interprets provided args and returns a list of processes"""
@@ -119,6 +120,7 @@ def get_processes(args):
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
+LvpOptions.addLvpOptions(parser)
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
@@ -236,6 +238,19 @@ for i in range(np):
         indirectBPClass = \
             ObjectList.indirect_bp_list.get(args.indirect_bp_type)
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
+
+    if cpu[i].loadValPred:
+        # lct
+        cpu[i].loadValPred.load_classification_table.localPredictorSize = 512
+        cpu[i].loadValPred.load_classification_table.localCtrBits = 2
+        # if options.lct_invalidate_zero:
+        #     cpu[i].loadValPred.load_classification_table.invalidateConstToZero = True
+        # lvpt
+        cpu[i].loadValPred.load_value_prediction_table.entries = 1024
+        cpu[i].loadValPred.load_value_prediction_table.historyDepth = 1
+        # cvu
+        cpu[i].loadValPred.constant_verification_unit.entries = 8
+        cpu[i].loadValPred.constant_verification_unit.replacementPolicy = 1
 
     system.cpu[i].createThreads()
 
