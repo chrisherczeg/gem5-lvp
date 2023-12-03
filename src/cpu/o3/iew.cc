@@ -1548,23 +1548,9 @@ IEW::writebackInsts()
                     //inst->setCanCommit();
                     if(inst->numDestRegs() == 1) {
                         auto ptr = inst->renamedDestIdx(0);
-                        if(ptr->is(IntRegClass)) {
-                            inst->setRegOperand(inst->staticInst.get(), 
+                        inst->setRegOperand(inst->staticInst.get(), 
                                                    0, inst->getPredictedValue());
-                            //instQueue.wakeDependents(inst);
-                            scoreboard->setReg(ptr);
-                            DPRINTF(LVP, "LVP Const INT Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->effAddr, ptr->index());
-                        }
-                        else if(ptr->is(FloatRegClass)) {
-                            inst->setRegOperand(inst->staticInst.get(), 
-                                                   0, inst->getPredictedValue());
-                            //instQueue.wakeDependents(inst);
-                            scoreboard->setReg(inst->renamedDestIdx(0));
-                            DPRINTF(LVP, "LVP Const FLOAT Inst[%llu]: ox%x setting reg %d as ready\n", inst->seqNum, inst->effAddr, ptr->index());
-                        }
-                        else {
-                            // This isn't supposed to happen
-                        }
+                        scoreboard->setReg(ptr);
                     }
                     else {
                         // This isn't supposed to happen (except maybe for
@@ -1763,6 +1749,7 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
+
     if (!fetchRedirect[tid] ||
         !toCommit->squash[tid] ||
         toCommit->squashedSeqNum[tid] > inst->seqNum) {
@@ -1785,6 +1772,18 @@ IEW::checkMisprediction(const DynInstPtr& inst)
                 iewStats.predictedTakenIncorrect++;
             } else {
                 iewStats.predictedNotTakenIncorrect++;
+            }
+        }
+    }
+
+    if(inst->isLoad())
+    {
+        if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
+        {
+            if (inst->getRegOperand(inst->staticInst.get(), 
+                                                        0) != inst->getPredictedValue())
+            {
+                fetchRedirect[tid] = true;
             }
         }
     }

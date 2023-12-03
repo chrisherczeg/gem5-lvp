@@ -31,7 +31,7 @@ daxpy_build()
 
 matrix_transform_build()
 {
-    /usr/bin/g++ -O0 -std=gnu++11 test_images/matrix_transform.c $1
+    /usr/bin/g++ -O0 -std=gnu++11 -I include/ -L util/m5/build/x86/out/ test_images/matrix_transform.cc -lm5 $1
 
     if [ -f a.out ];
     then
@@ -41,7 +41,7 @@ matrix_transform_build()
 
 matrix_transform_run()
 {
-    ./build/ECE565-X86/gem5.opt configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches
+    ./build/ECE565-X86/gem5.opt $1 configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches --maxinsts=$2
 
     mv m5out/stats.txt m5out/matrix_transform.txt
 }
