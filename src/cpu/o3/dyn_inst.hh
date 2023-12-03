@@ -128,6 +128,8 @@ class DynInst : public ExecContext, public RefCounted
 
     bool
     isConstPredictionCorrect() {
+        // chrisherczeg: set this to false to
+        // only get stats for lvp
         return _predictionCorrect;
     }
 
