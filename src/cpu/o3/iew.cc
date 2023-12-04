@@ -1332,7 +1332,6 @@ IEW::executeInsts()
                     inst->verifyConstLoad(inst->threadNumber);  
                 }
 
-                ldstQueue.scoreboard = this->scoreboard;
                 fault = ldstQueue.executeLoad(inst);
 
                 if (inst->isTranslationDelayed() &&
