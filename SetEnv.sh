@@ -6,7 +6,7 @@ export PATH="/package/gcc/8.3.0/bin:$PATH"
 
 build_x86()
 {
-    scons-3 USE_HDF5=0 -j `nproc` ./build/ECE565-X86/gem5.opt
+    scons-3 USE_HDF5=0 -j 40 ./build/ECE565-X86/gem5.opt
 }
 
 build_arm()
@@ -41,7 +41,7 @@ matrix_transform_build()
 
 matrix_transform_run()
 {
-    ./build/ECE565-X86/gem5.opt $1 configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches --maxinsts=$2
+    ./build/ECE565-X86/gem5.opt --debug-flags=LVP --debug-start=3413810250 --debug-file=debug.out  configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches --maxinsts=10000000
 
     mv m5out/stats.txt m5out/matrix_transform.txt
 }

@@ -63,9 +63,7 @@ from common import MemConfig
 from common.FileSystemConfig import config_filesystem
 from common.Caches import *
 from common.cpu2000 import *
-
-
-import spec2k6_spec2k17
+from common import LvpOptions
 
 def get_processes(args):
     """Interprets provided args and returns a list of processes"""
@@ -122,51 +120,41 @@ def get_processes(args):
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
+LvpOptions.addLvpOptions(parser)
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
 
-parser.add_argument("-b", "--benchmark", default="",
-                 help="The benchmark to be loaded.")
-
-
 args = parser.parse_args()
-
-# for glibcxx_3.4.20 and libgfotran.5.so
-args.redirects = ['/lib64=/package/gcc/8.3.0/lib64']
-
 
 multiprocesses = []
 numThreads = 1
 
-process = spec2k6_spec2k17.get_process(args, buildEnv['TARGET_ISA'])
-multiprocesses.append(process)
+if args.bench:
+    apps = args.bench.split("-")
+    if len(apps) != args.num_cpus:
+        print("number of benchmarks not equal to set num_cpus!")
+        sys.exit(1)
 
-# if args.bench:
-#     apps = args.bench.split("-")
-#     if len(apps) != args.num_cpus:
-#         print("number of benchmarks not equal to set num_cpus!")
-#         sys.exit(1)
-
-#     for app in apps:
-#         try:
-#             if buildEnv['TARGET_ISA'] == 'arm':
-#                 exec("workload = %s('arm_%s', 'linux', '%s')" % (
-#                         app, args.arm_iset, args.spec_input))
-#             else:
-#                 exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
-#                         app, args.spec_input))
-#             multiprocesses.append(workload.makeProcess())
-#         except:
-#             print("Unable to find workload for %s: %s" %
-#                   (buildEnv['TARGET_ISA'], app),
-#                   file=sys.stderr)
-#             sys.exit(1)
-# elif args.cmd:
-#     multiprocesses, numThreads = get_processes(args)
-# else:
-#     print("No workload specified. Exiting!\n", file=sys.stderr)
-#     sys.exit(1)
+    for app in apps:
+        try:
+            if buildEnv['TARGET_ISA'] == 'arm':
+                exec("workload = %s('arm_%s', 'linux', '%s')" % (
+                        app, args.arm_iset, args.spec_input))
+            else:
+                exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
+                        app, args.spec_input))
+            multiprocesses.append(workload.makeProcess())
+        except:
+            print("Unable to find workload for %s: %s" %
+                  (buildEnv['TARGET_ISA'], app),
+                  file=sys.stderr)
+            sys.exit(1)
+elif args.cmd:
+    multiprocesses, numThreads = get_processes(args)
+else:
+    print("No workload specified. Exiting!\n", file=sys.stderr)
+    sys.exit(1)
 
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
@@ -251,17 +239,19 @@ for i in range(np):
             ObjectList.indirect_bp_list.get(args.indirect_bp_type)
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
+    cpu[i].commitToDecodeDelay = 1
+
     if cpu[i].loadValPred:
         # lct
-        cpu[i].loadValPred.load_classification_table.localPredictorSize = 512*4
-        cpu[i].loadValPred.load_classification_table.localCtrBits = 2
-        cpu[i].loadValPred.load_classification_table.invalidateConstToZero = True
+        cpu[i].loadValPred.load_classification_table.localPredictorSize = 512
+        cpu[i].loadValPred.load_classification_table.localCtrBits = 16
+        cpu[i].loadValPred.load_classification_table.invalidateConstToZero = True    
         # lvpt
-        cpu[i].loadValPred.load_value_prediction_table.entries = 1024*4
-        cpu[i].loadValPred.load_value_prediction_table.historyDepth = 1
+        cpu[i].loadValPred.load_value_prediction_table.entries = 4096
+        cpu[i].loadValPred.load_value_prediction_table.historyDepth = 16
         # cvu
-        cpu[i].loadValPred.constant_verification_unit.entries = 8*4
-        cpu[i].loadValPred.constant_verification_unit.replacementPolicy = 1
+        cpu[i].loadValPred.constant_verification_unit.entries = 128
+        cpu[i].loadValPred.constant_verification_unit.replacementPolicy = 2
 
     system.cpu[i].createThreads()
 

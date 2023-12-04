@@ -99,6 +99,7 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
     _status = Active;
     exeStatus = Running;
     wbStatus = Idle;
+    ldstQueue.scoreboard = this->scoreboard;
 
     // Setup wire to read instructions coming from issue.
     fromIssue = issueToExecQueue.getWire(-issueToExecuteDelay);
@@ -1328,7 +1329,11 @@ IEW::executeInsts()
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
                 if(inst->isConstLoad() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
-                    inst->verifyConstLoad(inst->threadNumber);
+                {
+                    inst->verifyConstLoad(inst->threadNumber);  
+                }
+
+                ldstQueue.scoreboard = this->scoreboard;
                 fault = ldstQueue.executeLoad(inst);
 
                 if (inst->isTranslationDelayed() &&
@@ -1778,12 +1783,14 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 
     if(inst->isLoad())
     {
+
         if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
         {
             if (inst->getRegOperand(inst->staticInst.get(), 
                                                         0) != inst->getPredictedValue())
             {
                 fetchRedirect[tid] = true;
+                squashDueToBranch(inst, tid);
             }
         }
     }
