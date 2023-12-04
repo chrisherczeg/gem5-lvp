@@ -64,6 +64,17 @@
                 "host_paths": [
                     "./benchmarks/constant/fs/tmp"
                 ]
+            },
+            {
+                "type": "RedirectPath",
+                "cxx_class": "gem5::RedirectPath",
+                "name": "redirect_paths3",
+                "path": "system.redirect_paths3",
+                "app_path": "/lib64",
+                "eventq_index": 0,
+                "host_paths": [
+                    "/package/gcc/8.3.0/lib64"
+                ]
             }
         ],
         "shadow_rom_ranges": [],
@@ -1006,7 +1017,12 @@
                         "name": "workload",
                         "path": "system.cpu.workload",
                         "cmd": [
-                            "matrix_transform.out"
+                            "/home/min/a/ece565/benchspec-2020/CPU2006/470.lbm/exe/lbm_base.amd64-m64-gcc43-nn",
+                            "20",
+                            "reference.dat",
+                            "0",
+                            "1",
+                            "/home/min/a/ece565/benchspec-2020/CPU2006/470.lbm//data/ref/input/100_100_130_ldc.of"
                         ],
                         "cwd": "/home/min/a/cherczeg/gem5-lvp",
                         "drivers": [],
@@ -1015,12 +1031,12 @@
                         "errout": "cerr",
                         "euid": 100,
                         "eventq_index": 0,
-                        "executable": "matrix_transform.out",
-                        "gid": 5000,
+                        "executable": "/home/min/a/ece565/benchspec-2020/CPU2006/470.lbm/exe/lbm_base.amd64-m64-gcc43-nn",
+                        "gid": 100,
                         "input": "cin",
                         "kvmInSE": false,
                         "maxStackSize": 67108864,
-                        "output": "cout",
+                        "output": "lbm.out",
                         "pgid": 100,
                         "pid": 100,
                         "ppid": 0,
