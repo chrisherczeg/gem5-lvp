@@ -1328,7 +1328,10 @@ IEW::executeInsts()
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
                 if(inst->isConstLoad() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
-                    inst->verifyConstLoad(inst->threadNumber);
+                {
+                    inst->verifyConstLoad(inst->threadNumber);  
+                }
+
                 fault = ldstQueue.executeLoad(inst);
 
                 if (inst->isTranslationDelayed() &&
@@ -1784,6 +1787,7 @@ IEW::checkMisprediction(const DynInstPtr& inst)
                                                         0) != inst->getPredictedValue())
             {
                 fetchRedirect[tid] = true;
+                squashDueToBranch(inst, tid);
             }
         }
     }

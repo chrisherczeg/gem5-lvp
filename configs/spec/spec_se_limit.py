@@ -253,15 +253,15 @@ for i in range(np):
 
     if cpu[i].loadValPred:
         # lct
-        cpu[i].loadValPred.load_classification_table.localPredictorSize = 512*4
-        cpu[i].loadValPred.load_classification_table.localCtrBits = 2
-        cpu[i].loadValPred.load_classification_table.invalidateConstToZero = True
+        cpu[i].loadValPred.load_classification_table.localPredictorSize = 512
+        cpu[i].loadValPred.load_classification_table.localCtrBits = 16
+        cpu[i].loadValPred.load_classification_table.invalidateConstToZero = True    
         # lvpt
-        cpu[i].loadValPred.load_value_prediction_table.entries = 1024*4
-        cpu[i].loadValPred.load_value_prediction_table.historyDepth = 1
+        cpu[i].loadValPred.load_value_prediction_table.entries = 4096
+        cpu[i].loadValPred.load_value_prediction_table.historyDepth = 16
         # cvu
-        cpu[i].loadValPred.constant_verification_unit.entries = 8*4
-        cpu[i].loadValPred.constant_verification_unit.replacementPolicy = 1
+        cpu[i].loadValPred.constant_verification_unit.entries = 128
+        cpu[i].loadValPred.constant_verification_unit.replacementPolicy = 2
 
     system.cpu[i].createThreads()
 

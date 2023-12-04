@@ -6,7 +6,7 @@ export PATH="/package/gcc/8.3.0/bin:$PATH"
 
 build_x86()
 {
-    scons-3 USE_HDF5=0 -j `nproc` ./build/ECE565-X86/gem5.opt
+    scons-3 USE_HDF5=0 -j 40 ./build/ECE565-X86/gem5.opt
 }
 
 build_arm()
