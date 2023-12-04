@@ -1783,7 +1783,6 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 
     if(inst->isLoad())
     {
-
         if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
         {
             if (inst->getRegOperand(inst->staticInst.get(), 

@@ -41,7 +41,7 @@ matrix_transform_build()
 
 matrix_transform_run()
 {
-    ./build/ECE565-X86/gem5.opt --debug-flags=LVP --debug-start=3413810250 --debug-file=debug.out  configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches --maxinsts=10000000
+    ./build/ECE565-X86/gem5.opt $1 configs/example/se.py --cpu-type=O3CPU -c matrix_transform.out --caches --maxinsts=$2
 
     mv m5out/stats.txt m5out/matrix_transform.txt
 }
