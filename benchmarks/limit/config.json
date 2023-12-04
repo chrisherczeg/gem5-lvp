@@ -774,7 +774,7 @@
                 "function_trace": false,
                 "function_trace_start": 0,
                 "iewToCommitDelay": 1,
-                "iewToDecodeDelay": 3,
+                "iewToDecodeDelay": 1,
                 "iewToFetchDelay": 1,
                 "iewToRenameDelay": 1,
                 "interrupts": [
