@@ -99,7 +99,6 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
     _status = Active;
     exeStatus = Running;
     wbStatus = Idle;
-    ldstQueue.scoreboard = this->scoreboard;
 
     // Setup wire to read instructions coming from issue.
     fromIssue = issueToExecQueue.getWire(-issueToExecuteDelay);
