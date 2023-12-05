@@ -839,10 +839,10 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
             inst->effSize = size;
             inst->effAddrValid(true);
 
-            if(inst->isConstLoad() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
-            {
-                inst->verifyConstLoad(inst->threadNumber); 
-            }
+            // if(inst->isConstLoad() && !inst->strictlyOrdered() && !inst->isInstPrefetch() && !inst->isExecOnSpecLoad())
+            // {
+            //     inst->verifyConstLoad(inst->threadNumber);  
+            // }
 
             if (cpu->checker) {
                 inst->reqToVerify = std::make_shared<Request>(*request->req());

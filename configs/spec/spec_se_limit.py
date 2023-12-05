@@ -253,9 +253,9 @@ for i in range(np):
 
     if cpu[i].loadValPred:
         # lct
-        cpu[i].loadValPred.load_classification_table.localPredictorSize = 512
-        cpu[i].loadValPred.load_classification_table.localCtrBits = 16
-        cpu[i].loadValPred.load_classification_table.invalidateConstToZero = True    
+        cpu[i].loadValPred.load_classification_table.localPredictorSize = 2048
+        cpu[i].loadValPred.load_classification_table.localCtrBits = 2
+        cpu[i].loadValPred.load_classification_table.invalidateConstToZero = False    
         # lvpt
         cpu[i].loadValPred.load_value_prediction_table.entries = 4096
         cpu[i].loadValPred.load_value_prediction_table.historyDepth = 16

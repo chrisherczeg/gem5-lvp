@@ -107,6 +107,7 @@ class DynInst : public ExecContext, public RefCounted
     LVPType _classification = LVP_STRONG_UNPREDICTABLE;
 
     RegVal _predictedVal = 0;
+    bool prediction_made = false;
 
     std::pair<LVPType, RegVal> 
     predictLoad(ThreadID tid) {
@@ -114,6 +115,7 @@ class DynInst : public ExecContext, public RefCounted
                                                               this->pc->instAddr());
         _classification = temp.first;
         _predictedVal = temp.second;
+        prediction_made = true;
         return temp;
     }
 
@@ -122,7 +124,7 @@ class DynInst : public ExecContext, public RefCounted
         Addr lvpt_index = this->cpu->lvp->lookupLVPTIndex(tid, 
                                                           this->pc->instAddr());
         _predictionCorrect = this->cpu->lvp->processLoadAddress(tid,
-                                                  this->pc->instAddr(), this->effAddr, lvpt_index);
+                                                  this->pc->instAddr(), this->physEffAddr, lvpt_index);
         return _predictionCorrect;
     }  
 
@@ -181,7 +183,7 @@ class DynInst : public ExecContext, public RefCounted
         this->removeLVPTag(idx);
         if(!this->effAddrValid()) panic("Virtual address not valid yet");
         return this->cpu->lvp->verifyPrediction(this->threadNumber, 
-                        this->pc->instAddr(), this->effAddr, temp, _predictedVal, _classification);
+                        this->pc->instAddr(), this->physEffAddr, temp, _predictedVal, _classification);
     }
 
     void 
@@ -190,7 +192,7 @@ class DynInst : public ExecContext, public RefCounted
             panic("Virtual address of store not valid yet");
         }
         else {
-            this->cpu->lvp->processStoreAddress(this->threadNumber, this->effAddr);
+            this->cpu->lvp->processStoreAddress(this->threadNumber, this->physEffAddr);
         }
     }
 
@@ -309,21 +311,11 @@ class DynInst : public ExecContext, public RefCounted
         MaxFlags
     };
 
-  private:
-    /* An amalgamation of a lot of boolean values into one */
-    std::bitset<MaxFlags> instFlags;
-
-    /** The status of this BaseDynInst.  Several bits can be set. */
-    std::bitset<NumStatus> status;
-
   protected:
     /** The result of the instruction; assumes an instruction can have many
      *  destination registers.
      */
     std::queue<InstResult> instResult;
-
-    /** PC state for this instruction. */
-    std::unique_ptr<PCStateBase> pc;
 
     /** Values to be written to the destination misc. registers. */
     std::vector<RegVal> _destMiscRegVal;
@@ -356,6 +348,15 @@ class DynInst : public ExecContext, public RefCounted
     uint8_t *_readySrcIdx;
 
   public:
+
+    /* An amalgamation of a lot of boolean values into one */
+    std::bitset<MaxFlags> instFlags;
+
+    /** PC state for this instruction. */
+    std::unique_ptr<PCStateBase> pc;
+
+    /** The status of this BaseDynInst.  Several bits can be set. */
+    std::bitset<NumStatus> status;
     size_t numSrcs() const { return _numSrcs; }
     size_t numDests() const { return _numDests; }
 
