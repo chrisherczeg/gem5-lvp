@@ -15,7 +15,6 @@ for i in "${array[@]}"
 do
     mkdir -p "$benchmark_dir/$i"
 
-    ./build/ECE565-X86/gem5.opt --outdir="$benchmark_dir/$i" --stats-file="matrix_transform_stats.txt" "$se_py_dir/se_$i.py" --cpu-type=O3CPU --caches --maxinsts=10000000 -c matrix_transform.out
     ./build/ECE565-X86/gem5.opt --outdir="$benchmark_dir/$i" --stats-file="namd_stats.txt" "$spec_se_py_dir/spec_se_$i.py" --cpu-type=O3CPU --caches --maxinsts=10000000 -b namd
     ./build/ECE565-X86/gem5.opt --outdir="$benchmark_dir/$i" --stats-file="lbm_stats.txt" "$spec_se_py_dir/spec_se_$i.py" --cpu-type=O3CPU --caches --maxinsts=10000000 -b lbm
     ./build/ECE565-X86/gem5.opt --outdir="$benchmark_dir/$i" --stats-file="milc_stats.txt" "$spec_se_py_dir/spec_se_$i.py" --cpu-type=O3CPU --caches --maxinsts=10000000 -b milc
