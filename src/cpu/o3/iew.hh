@@ -451,6 +451,9 @@ class IEW
          *  execute. */
         statistics::Formula branchMispredicts;
 
+        statistics::Scalar mispredictedLVP;
+        statistics::Scalar LvpCorrect;
+
         struct ExecutedInstStats : public statistics::Group
         {
             ExecutedInstStats(CPU *cpu);

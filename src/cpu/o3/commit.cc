@@ -1392,6 +1392,8 @@ Commit::markCompletedInsts()
 
             // Mark the instruction as ready to commit.
             fromIEW->insts[inst_num]->setCanCommit();
+            fromIEW->insts[inst_num]->resetSpeculativeExecOnLoad();
+            fromIEW->insts[inst_num]->prediction_made = false;
         }
     }
 }

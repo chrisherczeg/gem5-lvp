@@ -56,6 +56,7 @@
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
+#include "debug/LVPDEBUG.hh"
 #include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 #include "debug/LVP.hh"
@@ -169,6 +170,10 @@ IEW::IEWStats::IEWStats(CPU *cpu)
              "Number of times the LSQ has become full, causing a stall"),
     ADD_STAT(memOrderViolationEvents, statistics::units::Count::get(),
              "Number of memory order violations"),
+    ADD_STAT(mispredictedLVP, statistics::units::Count::get(),
+             "mispredictedLVP"),
+    ADD_STAT(LvpCorrect, statistics::units::Count::get(),
+             "LvpCorrect"),
     ADD_STAT(predictedTakenIncorrect, statistics::units::Count::get(),
              "Number of branches that were predicted taken incorrectly"),
     ADD_STAT(predictedNotTakenIncorrect, statistics::units::Count::get(),
@@ -1009,128 +1014,15 @@ IEW::dispatchInsts(ThreadID tid)
             DPRINTF(IEW, "[tid:%i] Issue: Memory instruction "
                     "encountered, adding to LSQ.\n", tid);
             
-            std::pair<LVPType, RegVal> prediction = inst->predictLoad(tid);
-             if(prediction.first == LVP_CONSTANT) {
-                // Trigger a CVU lookup of the lvpt index and the load address
-                bool const_valid = false; //inst->verifyConstLoad(tid);
-                if (!const_valid) {
-                    // This prediction failed
-                    // The CVU will have already incremented the misprediction
-                    // counter
-                    // Push this load instruction in the ldstQueue
-                    ldstQueue.insertLoad(inst);
+            // if (inst->_predictedVal == 0)
+            //std::pair<LVPType, RegVal> prediction = inst->predictLoad(tid);
+            ldstQueue.insertLoad(inst);
 
-                    ++iewStats.dispLoadInsts;
+            ++iewStats.dispLoadInsts;
 
-                    add_to_iq = true;
+            add_to_iq = true;
 
-                    toRename->iewInfo[tid].dispatchedToLQ++;
-                }
-                else {
-                    // This load was predicted correctly
-                    // A correct prediction for a constant load need not update
-                    // the LCT.
-                    // Write the predicted value to the allocated register and
-                    // forward all values 
-                    // Mark this load as executed and ready to commit.
-                    //  DPRINTF(LVP, "IEW: Const load [sn: %d] found by LVP: 0x%x\n", inst->seqNum, inst->instAddr());
-                    ldstQueue.insertLoad(inst);
-
-                    ++iewStats.dispLoadInsts;
-
-                    add_to_iq = true;
-                    toRename->iewInfo[tid].dispatchedToLQ++;
-                    // toRename->iewInfo[tid].dispatched++;
-                    // insts_to_dispatch.pop();
-                    // inst->setIssued();
-                    // inst->setExecuted();
-                    // inst->setCanCommit();
-                    // add_to_iq = false;
-
-                    // Pass the load value to the destination register
-                    /*if(inst->numDestRegs() == 1) {
-                        if(inst->isInteger()) {
-                            inst->setIntRegOperand(inst->staticInst.get(), 
-                                                   0, prediction.second);
-                            instQueue.wakeDependents(inst);
-                            scoreboard->setReg(inst->renamedDestIdx(0));
-                        }
-                        else if(inst->isFloating()) {
-                           inst->setFloatRegOperandBits(inst->staticInst.get(), 
-                                                   0, prediction.second);
-                            instQueue.wakeDependents(inst);
-                            scoreboard->setReg(inst->renamedDestIdx(0));
-                        }
-                        else {
-                            // This isn't supposed to happen
-                        }
-                    }
-                    else {
-                        // This isn't supposed to happen (except maybe for
-                        // vectors)
-                    }
-                    */
-                }
-            }
-            else if(prediction.first == LVP_PREDICTABLE) {
-                // Need to mark this instruction as predictable so that the CVU
-                // can verify later. -> this has been done during the 
-                // predictLoad() call. 
-
-                // These loads will follow the normal execution flow: but the 
-                // predicted value will be passed to all consumers. 
-                // The destination register will also need to be tagged with the
-                // predictable flag so that instructions which consume this
-                // register are not flushed from the IQ.
-                if(inst->numDestRegs() == 1) {
-                    // Tag the destination register for subsequent dependent 
-                    // instructions
-                    /*
-                    inst->tagLVPDestReg(0);
-                    if(inst->isInteger()) {
-                        inst->setIntRegOperand(inst->staticInst.get(), 
-                                               0, prediction.second);
-                        instQueue.wakeDependents(inst);
-                        scoreboard->setReg(inst->renamedDestIdx(0));
-                    }
-                    else if(inst->isFloating()) {
-                        inst->setFloatRegOperand(inst->staticInst.get(), 
-                                               0, prediction.second);
-                        instQueue.wakeDependents(inst);
-                        scoreboard->setReg(inst->renamedDestIdx(0));
-                    }
-                    else {
-                        // This isn't supposed to happen
-                    }
-                    */
-                }
-                else {
-                    // This isn't supposed to happen (except maybe for
-                    // vectors)
-                }
-
-                // Reserve a spot in the load store queue for this
-                // memory access.
-                ldstQueue.insertLoad(inst);
-
-                ++iewStats.dispLoadInsts;
-
-                add_to_iq = true;
-
-                toRename->iewInfo[tid].dispatchedToLQ++;
-            }
-            else
-            {
-                // Reserve a spot in the load store queue for this
-                // memory access.
-                ldstQueue.insertLoad(inst);
-
-                ++iewStats.dispLoadInsts;
-
-                add_to_iq = true;
-
-                toRename->iewInfo[tid].dispatchedToLQ++;
-            }
+            toRename->iewInfo[tid].dispatchedToLQ++;
         } else if (inst->isStore()) {
             DPRINTF(IEW, "[tid:%i] Issue: Memory instruction "
                     "encountered, adding to LSQ.\n", tid);
@@ -1327,10 +1219,48 @@ IEW::executeInsts()
             } else if (inst->isLoad()) {
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
-                if(inst->isConstLoad() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
+                if (inst->prediction_made == false)
+                    std::pair<LVPType, RegVal> prediction = inst->predictLoad(inst->threadNumber);
+
+                if (inst->isConstLoad())
                 {
-                    inst->verifyConstLoad(inst->threadNumber);  
+                    inst->verifyConstLoad(inst->threadNumber);
                 }
+
+                if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch()
+                && !inst->isExecOnSpecLoad() && (inst->isConstLoad() || inst->isSpeculatedLoad())) {
+                    // Pass the load value to the destination register
+                    //inst->setCanCommit();
+                    if(inst->numDestRegs() == 1) {
+
+                        std::stringstream debug_stream;
+                        debug_stream << "LVP predict start" << std::endl;
+                         std::string debug_string;
+                        inst->dump(debug_string);
+                        debug_stream << debug_string << std::endl;
+                        debug_stream << "inst address: 0x" << std::hex << inst->pc->instAddr() << std::endl;
+                        debug_stream << "phys address: 0x" << std::hex << inst->physEffAddr << std::endl;
+                        debug_stream << "eff address: 0x" << std::hex << inst->effAddr << std::endl;
+
+                        debug_stream << "prediction 0x" << std::hex << inst->getPredictedValue() << std::endl;
+                        debug_stream << "LVP predict end" << std::endl;
+
+                        DPRINTF(LVPDEBUG, debug_stream.str().c_str());
+
+                        inst->recordResult(false);
+                        auto ptr = inst->renamedDestIdx(0);
+                        inst->setRegOperand(inst->staticInst.get(), 
+                                                    0, inst->getPredictedValue());
+                        scoreboard->setReg(ptr);
+                        inst->speculativeExecOnLoad();
+                        inst->recordResult(true);
+                    }
+                    else {
+                        // This isn't supposed to happen (except maybe for
+                        // vectors)
+                    }
+                }
+
 
                 fault = ldstQueue.executeLoad(inst);
 
@@ -1545,26 +1475,6 @@ IEW::writebackInsts()
         // when it's ready to execute the strictly ordered load.
         if (!inst->isSquashed() && inst->isExecuted() &&
                 inst->getFault() == NoFault) {
-            if(inst->isLoad()) {
-                if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch()) {
-                    // Pass the load value to the destination register
-                    //inst->setCanCommit();
-                    if(inst->numDestRegs() == 1) {
-                        auto ptr = inst->renamedDestIdx(0);
-                        inst->setRegOperand(inst->staticInst.get(), 
-                                                   0, inst->getPredictedValue());
-                        scoreboard->setReg(ptr);
-                    }
-                    else {
-                        // This isn't supposed to happen (except maybe for
-                        // vectors)
-                    }
-                }
-                else {
-                    if(inst->numDestRegs() == 1)
-                        inst->verifyPrediction(0);
-                }
-            }
             int dependents = instQueue.wakeDependents(inst);
 
             for (int i = 0; i < inst->numDestRegs(); i++) {
@@ -1776,20 +1686,55 @@ IEW::checkMisprediction(const DynInstPtr& inst)
             } else {
                 iewStats.predictedNotTakenIncorrect++;
             }
+
+            return;
         }
     }
 
     if(inst->isLoad())
     {
-        if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch())
+        if(inst->isExecOnSpecLoad())
         {
             if (inst->getRegOperand(inst->staticInst.get(), 
-                                                        0) != inst->getPredictedValue())
+                                                        0) != inst->getPredictedValue() && inst->isExecuted())
             {
                 fetchRedirect[tid] = true;
                 squashDueToBranch(inst, tid);
+
+                std::stringstream debug_stream;
+                debug_stream << "LVP mispredict start" << std::endl;
+                // std::cout << "INST FLAGS " << inst->instFlags << std::endl;
+                // std::cout << "INST Status " << inst->status << std::endl; 
+                // std::cout << "spec prediction info: " << std::endl;
+                std::string debug_string;
+                inst->dump(debug_string);
+                debug_stream << debug_string << std::endl;
+                debug_stream << "inst address: 0x" << std::hex << inst->pc->instAddr() << std::endl;
+                debug_stream << "phys address: 0x" << std::hex << inst->physEffAddr << std::endl;
+                debug_stream << "eff address: 0x" << std::hex << inst->effAddr << std::endl;
+
+                debug_stream << "prediction 0x" << std::hex << inst->getPredictedValue() << std::endl;
+                debug_stream<< "correct val 0x" << std::hex << inst->getRegOperand(inst->staticInst.get(), 0) << std::endl;
+                debug_stream << "LVP mispredict end" << std::endl;
+
+                DPRINTF(LVPDEBUG, debug_stream.str().c_str());
+
+
+                iewStats.mispredictedLVP++;
+            }
+            else
+            {
+                iewStats.LvpCorrect++;
             }
         }
+
+        // if (inst->isConstLoad())
+        // {
+        //     inst->verifyConstLoad(inst->threadNumber);
+        // }
+        if(inst->numDestRegs() == 1)
+            inst->verifyPrediction(0);
+        // inst->_predictedVal = 0;
     }
 }
 
