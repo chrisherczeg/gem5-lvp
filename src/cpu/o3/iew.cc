@@ -1222,12 +1222,7 @@ IEW::executeInsts()
                 if (inst->prediction_made == false)
                     std::pair<LVPType, RegVal> prediction = inst->predictLoad(inst->threadNumber);
 
-                if (inst->isConstLoad())
-                {
-                    inst->verifyConstLoad(inst->threadNumber);
-                }
-
-                if(inst->isConstPredictionCorrect() && !inst->strictlyOrdered() && !inst->isInstPrefetch()
+                if(!inst->strictlyOrdered() && !inst->isInstPrefetch()
                 && !inst->isExecOnSpecLoad() && (inst->isConstLoad() || inst->isSpeculatedLoad())) {
                     // Pass the load value to the destination register
                     //inst->setCanCommit();
@@ -1247,13 +1242,14 @@ IEW::executeInsts()
 
                         DPRINTF(LVPDEBUG, debug_stream.str().c_str());
 
-                        inst->recordResult(false);
-                        auto ptr = inst->renamedDestIdx(0);
-                        inst->setRegOperand(inst->staticInst.get(), 
-                                                    0, inst->getPredictedValue());
-                        scoreboard->setReg(ptr);
+                        // inst->recordResult(false);
+                        // auto ptr = inst->renamedDestIdx(0);
+                        // inst->setRegOperand(inst->staticInst.get(), 
+                        //                             0, inst->getPredictedValue());
+                        // scoreboard->setReg(ptr);
+                        
+                        // inst->recordResult(true);
                         inst->speculativeExecOnLoad();
-                        inst->recordResult(true);
                     }
                     else {
                         // This isn't supposed to happen (except maybe for
@@ -1695,11 +1691,21 @@ IEW::checkMisprediction(const DynInstPtr& inst)
     {
         if(inst->isExecOnSpecLoad())
         {
-            if (inst->getRegOperand(inst->staticInst.get(), 
-                                                        0) != inst->getPredictedValue() && inst->isExecuted())
+            if (inst->isConstLoad())
             {
-                fetchRedirect[tid] = true;
-                squashDueToBranch(inst, tid);
+                inst->verifyConstLoad(inst->threadNumber);
+            }
+
+            if ((inst->getRegOperand(inst->staticInst.get(), 
+                                                        0) == inst->getPredictedValue()) && inst->isExecuted())
+            {
+                // wakeDependents(inst);
+                iewStats.LvpCorrect++;
+            }
+            else
+            {
+                // fetchRedirect[tid] = true;
+                // squashDueToBranch(inst, tid);
 
                 std::stringstream debug_stream;
                 debug_stream << "LVP mispredict start" << std::endl;
@@ -1722,18 +1728,10 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 
                 iewStats.mispredictedLVP++;
             }
-            else
-            {
-                iewStats.LvpCorrect++;
-            }
         }
 
-        // if (inst->isConstLoad())
-        // {
-        //     inst->verifyConstLoad(inst->threadNumber);
-        // }
-        if(inst->numDestRegs() == 1)
-            inst->verifyPrediction(0);
+        if(inst->numDestRegs() == 1 && inst->prediction_made)
+                inst->verifyPrediction(0);
         // inst->_predictedVal = 0;
     }
 }
