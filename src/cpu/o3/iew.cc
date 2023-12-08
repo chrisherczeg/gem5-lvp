@@ -1696,8 +1696,10 @@ IEW::checkMisprediction(const DynInstPtr& inst)
                 inst->verifyConstLoad(inst->threadNumber);
             }
 
-            if ((inst->getRegOperand(inst->staticInst.get(), 
-                                                        0) == inst->getPredictedValue()) && inst->isExecuted())
+            auto ptr = inst->renamedDestIdx(0);
+            auto temp = inst->cpu->getReg(ptr);
+
+            if (temp == inst->getPredictedValue())
             {
                 // wakeDependents(inst);
                 iewStats.LvpCorrect++;
