@@ -1242,13 +1242,13 @@ IEW::executeInsts()
 
                         DPRINTF(LVPDEBUG, debug_stream.str().c_str());
 
-                        // inst->recordResult(false);
-                        // auto ptr = inst->renamedDestIdx(0);
-                        // inst->setRegOperand(inst->staticInst.get(), 
-                        //                             0, inst->getPredictedValue());
-                        // scoreboard->setReg(ptr);
+                        inst->recordResult(false);
+                        auto ptr = inst->renamedDestIdx(0);
+                        inst->setRegOperand(inst->staticInst.get(), 
+                                                    0, inst->getPredictedValue());
+                        scoreboard->setReg(ptr);
                         
-                        // inst->recordResult(true);
+                        inst->recordResult(true);
                         inst->speculativeExecOnLoad();
                     }
                     else {
@@ -1706,8 +1706,8 @@ IEW::checkMisprediction(const DynInstPtr& inst)
             }
             else
             {
-                // fetchRedirect[tid] = true;
-                // squashDueToBranch(inst, tid);
+                fetchRedirect[tid] = true;
+                squashDueToBranch(inst, tid);
 
                 std::stringstream debug_stream;
                 debug_stream << "LVP mispredict start" << std::endl;
